@@ -45,11 +45,18 @@ if __name__ == "__main__":
         with imaplib.IMAP4_SSL(host=imap_server, port=imap_port, ) as imap:
             log.debug("connected")
             imap.login(imap_user,imap_password)
+            imap.select()
             log.debug("logged in")
-            boxes = imap.list()
-            for b  in boxes:
-                log.debug(str(b))
-            log.debug("boxes listed")
+
+            ret, data = imap.uid('search', None, '(UNSEEN)')
+            if ret != 'OK':
+                raise Exception("Failed to search for unseen messages")
+            uids = data[0].split()
+            for uid in uids:
+                log.debug("fetching message "+str(uid))
+                ret, data = imap.uid('fetch', uid, '(BODY[TEXT])')
+                if ret == 'OK':
+                    body = data[0][1]
     except:
         log.exception("problem with IMAP server")
 
