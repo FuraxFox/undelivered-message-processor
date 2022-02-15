@@ -1,14 +1,10 @@
-#!/usr/bin/python3
-
-import imaplib
-#import umplib.message
-
-from imaplib import IMAP4
+#!/usr/bin/env python3
 
 import logging
 import logging.handlers
 import rich
 import configparser
+import imaplib
 
 from rich.console import Console
 from rich.logging  import RichHandler
@@ -17,6 +13,8 @@ from rich.pretty import pprint
 #from rich import inspect
 #from rich import print
 import rich.traceback
+
+import umplib.message
 
 ########################################## Initialisations globales
 rich.traceback.install()
@@ -52,13 +50,22 @@ if __name__ == "__main__":
             if ret != 'OK':
                 raise Exception("Failed to search for unseen messages")
             uids = data[0].split()
-            for uid in uids:
-                log.debug("fetching message "+str(uid))
-                ret, data = imap.uid('fetch', uid, '(BODY[TEXT])')
-                if ret == 'OK':
-                    body = data[0][1]
+            if len(uids) != 0 :
+                messages = []
+                for uid in uids:
+                    log.debug("fetching message "+str(uid))
+                    ret, data = imap.uid('fetch', uid, '(BODY[TEXT])')
+                    if ret == 'OK':
+                        body = data[0][1]
+                    messages.append( umplib.message.Message( str(body)) )
+                for msg in messages:
+                    log.info( msg.DSNs )    
+            else:
+                log.info("no unread message")
     except:
         log.exception("problem with IMAP server")
+        exit(1)
+    log.info("done.")
 
 
 
