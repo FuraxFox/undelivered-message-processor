@@ -49,15 +49,15 @@ if __name__ == "__main__":
             ret, data = imap.uid('search', None, '(UNSEEN)')
             if ret != 'OK':
                 raise Exception("Failed to search for unseen messages")
-            uids = data[0].split()
-            if len(uids) != 0 :
+            uid_list = data[0].split()
+            if len(uid_list) != 0 :
                 messages = []
-                for uid in uids:
+                for uid in uid_list:
                     log.debug("fetching message "+str(uid))
-                    ret, data = imap.uid('fetch', uid, '(BODY[TEXT])')
+                    ret, data = imap.uid('fetch', uid, '(BODY.PEEK[TEXT])')
                     if ret == 'OK':
                         body = data[0][1]
-                    messages.append( umplib.message.Message( str(body)) )
+                    messages.append( umplib.message.Message( str(body), logger=log ) )
                 for msg in messages:
                     log.info( msg.DSNs )    
             else:
