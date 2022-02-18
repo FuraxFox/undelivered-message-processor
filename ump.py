@@ -8,7 +8,7 @@ import imaplib
 
 from rich.console import Console
 from rich.logging  import RichHandler
-#from rich.progress import track
+from rich.progress import track
 from rich.pretty import pprint
 #from rich import inspect
 #from rich import print
@@ -17,6 +17,7 @@ import rich.traceback
 import umplib.message
 
 ########################################## Initialisations globales
+
 rich.traceback.install()
 log = logging.getLogger("ump")
 console = Console()
@@ -24,18 +25,16 @@ console = Console()
 if __name__ == "__main__":
 
     logging.basicConfig(
-        handlers=[RichHandler(rich_tracebacks=True)])
+        handlers=[ RichHandler(rich_tracebacks=True) ] )
     log.setLevel(logging.DEBUG)
 
     ini = configparser.ConfigParser()
     ini.read('ump-secret.ini')
 
-    imap_server = ini['imap']['server']
-    imap_port = ini['imap']['port']
-    imap_user=ini['imap']['login']
-    imap_password=ini['imap']['password']
-
-
+    imap_server   = ini['imap']['server']
+    imap_port     = ini['imap']['port']
+    imap_user     = ini['imap']['login']
+    imap_password = ini['imap']['password']
 
     log.debug("connexion <"+imap_server +":" +str(imap_port)+ "> ")
 
@@ -49,17 +48,24 @@ if __name__ == "__main__":
             ret, data = imap.uid('search', None, '(UNSEEN)')
             if ret != 'OK':
                 raise Exception("Failed to search for unseen messages")
-            uid_list = data[0].split()
+            uid_list_str = data[0]
+            uid_list = uid_list_str.split()
             if len(uid_list) != 0 :
                 messages = []
-                for uid in uid_list:
-                    log.debug("fetching message "+str(uid))
-                    ret, data = imap.uid('fetch', uid, '(BODY.PEEK[TEXT])')
-                    if ret == 'OK':
+                for uid in track(uid_list):
+                    log.debug("fetching message " + str(uid) )
+                    res1, data = imap.uid( 'fetch', uid, '(RFC822)')
+                    res2, flags = imap.uid('store', uid,'-FLAGS','\\Seen')
+                    if res1 == 'OK':
                         body = data[0][1]
-                    messages.append( umplib.message.Message( str(body), logger=log ) )
+                        messages.append( 
+                            umplib.message.Message( 
+                                body, 
+                                logger=log ) )
+                    else:
+                        log.warning("failed to get message uuid:"+uid+" : "+res1)
                 for msg in messages:
-                    log.info( msg.DSNs )    
+                    log.info( msg.DSNs )
             else:
                 log.info("no unread message")
     except:
