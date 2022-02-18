@@ -1,5 +1,7 @@
 
 import email
+from rich import print
+from rich.pretty import pprint
 
 msg = """
 --05D02198038B.1644859448/mail.goupil.one
@@ -19,3 +21,10 @@ Diagnostic-Code: X-Postfix; unknown user: "nexistepas"
 """
 
 print(msg)
+
+res = []
+for sub in msg.split("\n"):
+    if ':' in sub:
+        res.append(map(str.strip, sub.split(':', 1)))
+res = dict(res)
+pprint(res)
