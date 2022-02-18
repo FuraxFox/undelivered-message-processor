@@ -8,8 +8,15 @@ def _is_part_dsn(msg):
         return False
     return True
 
+def _parse_dsn(dsntext):
+    res = []
+    for sub in dsntext.split("\n"):
+        if ':' in sub:
+            res.append(map(str.strip, sub.split(':', 1)))
+    res = dict(res)
+    return res
 
-class Message :
+class DSNMessage :
     
     def __init__(self, msgbytes, logger=None):
         self._dsn = None
@@ -29,7 +36,7 @@ class Message :
                     content_type = part.get_content_type()
                     if content_type == 'message/delivery-status':
                         self.logger.debug(" DSN part("+str(part_num)+"):<<\n"+str(part)+"\n>>")
-                        self._dsn = part.as_string() #part.get_payload()
+                        self._dsn = _parse_dsn( part.as_string() ) #part.get_payload()
                     else:
                         self.logger.debug(" non DSN part("+str(part_num)+"):<"+content_type+">")
                     part_num=part_num+1

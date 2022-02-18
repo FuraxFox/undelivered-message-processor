@@ -59,7 +59,7 @@ if __name__ == "__main__":
                     res2, flags = imap.uid( 'store', uid,'-FLAGS','\\Seen')
                     if res1 == 'OK':
                         messages.append( 
-                            umplib.message.Message( 
+                            umplib.message.DSNMessage( 
                                 data[0][1], 
                                 logger=log ) )
                     else:
