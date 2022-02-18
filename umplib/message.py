@@ -1,9 +1,18 @@
 import email
 
+
+def _is_part_dsn(msg):
+    if len(msg) <= 1:
+        return False
+    if msg[1].get_content_type() != 'message/delivery-status':
+        return False
+    return True
+
+
 class Message :
     
     def __init__(self, msgbytes, logger=None):
-        self.DSNs = []
+        self._dsn = None
         self.orig_msg = None
         self.logger=logger
         self._parse_message(msgbytes)
@@ -13,19 +22,24 @@ class Message :
         msg = email.message_from_bytes( msgbytes )
         if msg.is_multipart() :
             payload = msg.get_payload()
-            if len(payload) > 1 and payload[1].get_content_type() == 'message/delivery-status' :
+            if  _is_part_dsn( payload ):
                 self.logger.debug("delivery status found")            
-                for dsn in msg.get_payload(1).get_payload():
-                    self.DSNs.append(dsn)
-                    self.logger.debug("DSN:"+str(dsn))
-
-                if len(msg.get_payload()) > 2 :
+                part_num=0
+                for part in payload:
+                    content_type = part.get_content_type()
+                    if content_type == 'message/delivery-status':
+                        self.logger.debug(" DSN part("+str(part_num)+"):<<\n"+str(part)+"\n>>")
+                        self._dsn = part.as_string() #part.get_payload()
+                    else:
+                        self.logger.debug(" non DSN part("+str(part_num)+"):<"+content_type+">")
+                    part_num=part_num+1
+                if len( payload ) > 2 :
                     self.orig_msg= payload[2] # original message
         else: 
             self.logger.debug("not multipart")
 
 
-    def DSNs( self ):
-        return self.DSNs
+    def DSN( self ):
+        return self._dsn
 
     

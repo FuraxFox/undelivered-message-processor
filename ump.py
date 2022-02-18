@@ -51,21 +51,22 @@ if __name__ == "__main__":
             uid_list_str = data[0]
             uid_list = uid_list_str.split()
             if len(uid_list) != 0 :
+                log.debug("processing messages")
                 messages = []
                 for uid in track(uid_list):
                     log.debug("fetching message " + str(uid) )
-                    res1, data = imap.uid( 'fetch', uid, '(RFC822)')
-                    res2, flags = imap.uid('store', uid,'-FLAGS','\\Seen')
+                    res1, data  = imap.uid( 'fetch', uid, '(RFC822)')
+                    res2, flags = imap.uid( 'store', uid,'-FLAGS','\\Seen')
                     if res1 == 'OK':
-                        body = data[0][1]
                         messages.append( 
                             umplib.message.Message( 
-                                body, 
+                                data[0][1], 
                                 logger=log ) )
                     else:
-                        log.warning("failed to get message uuid:"+uid+" : "+res1)
+                        log.warning("failed to get message uuid:" + uid + " : " + res1)
+                log.debug("processing collected DSN")
                 for msg in messages:
-                    log.info( msg.DSNs )
+                    log.info("dsn: "+ str(msg.DSN()) )
             else:
                 log.info("no unread message")
     except:
