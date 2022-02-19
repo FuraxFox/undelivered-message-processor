@@ -22,7 +22,7 @@ Current version only manages DSN for a single recipient.
 RFC allows for multiple recipients to be addressed by a single DSN.
 This case is rare and not managed by current version of this script.
 
-## Options
+## Usage
 
 ```
 ump.py [-h] [-c CONFIG] [-o OUTPUT]
@@ -33,8 +33,6 @@ Optional arguments:
 * `-h`, `--help`                 show the help message and exit
 * `-c CONFIG`, `--config CONFIG` configuration file
 *  `-o OUTPUT`, `--output OUTPUT` destination file
-
-
 
 ## Configuration
 
@@ -47,5 +45,24 @@ password=YourPasswordHere
 folder=INBOX
 ```
 
+## Installation
+
+1. Checkout the project
+2. install dependencies (in a `VirtualEnv` preferably)
+3. customize the configuration file
+4. run
 
 
+## Dependencies
+
+The following Python3 modules are required:
+
+* `argparse`
+* `configparser`
+* `csv`
+* `email`
+* `imaplib2`
+* `logging`
+* `rich` 
+
+Most of them should be pre-installed with your Python3 distribution.
