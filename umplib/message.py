@@ -1,4 +1,5 @@
 import email
+from tkinter import W
 
 def _is_part_dsn(msg):
     if len(msg) <= 1:
@@ -15,9 +16,9 @@ def _parse_dsn(dsntext):
     res = dict(res)
     sender = ''
     recipient = ''
-    if not res['X-Postfix-Sender'] is None:
+    if 'X-Postfix-Sender' in res.keys():
         sender = res['X-Postfix-Sender']    
-    if not res['Original-Recipient'] is None:
+    if 'Original-Recipient' in res.keys():
         recipient = res['Original-Recipient']    
     res['To']   = recipient
     res['From'] = sender
