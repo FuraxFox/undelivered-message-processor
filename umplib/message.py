@@ -30,6 +30,7 @@ def _rfc822_to_iso8601(stamp):
     """
     # conversion from RFC2822 timestamp to datetime is ugly
     # see <https://stackoverflow.com/questions/1568856/how-do-i-convert-rfc822-to-a-python-datetime-object>
+    #
     date_time_obj = datetime.datetime.fromtimestamp( email.utils.mktime_tz(email.utils.parsedate_tz( stamp )), pytz.utc )
     return date_time_obj.isoformat()
 

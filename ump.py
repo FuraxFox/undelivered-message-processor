@@ -17,7 +17,8 @@ import umplib.message
 
 def dicts2csv(filename,DSNs):
     """
-    Receive a list of DSN as dictionnaries and write them to an Ms Excel compatible CSV file"""
+    Receive a list of DSN as dictionaries and write them to an Ms Excel compatible CSV file
+    """
     headers = [
         'From',
         'To', 
@@ -53,6 +54,7 @@ def dicts2csv(filename,DSNs):
 ########################################## Main
 if __name__ == "__main__":
 
+    # logging, console, error handling inits
     rich.traceback.install()
     log = logging.getLogger("ump")
     console = rich.console.Console()
@@ -60,6 +62,7 @@ if __name__ == "__main__":
         handlers=[ rich.logging.RichHandler(rich_tracebacks=True) ] )
     log.setLevel(logging.INFO)
 
+    # parsing commande line
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", help="configuration file", default="ump-secret.ini")
     parser.add_argument("-o", "--output", help="destination file",   default="output.csv")
@@ -67,6 +70,7 @@ if __name__ == "__main__":
     csv_filename = args.output
     ini_filename = args.config
 
+    # reading config
     try:
         ini = configparser.ConfigParser()
         ini.read(ini_filename)
@@ -111,6 +115,7 @@ if __name__ == "__main__":
                         # processing the message content    
                         msg = umplib.message.DSNMessage( data[0][1], logger=log )
                         if not msg.DSN() is None:
+                            # we have a DSN
                             DSNs.append( msg.DSN() )
                     else:
                         log.warning("failed to get message uuid:" + uid + " : " + res1)
