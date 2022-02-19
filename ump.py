@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 
-import logging
-import logging.handlers
-import rich
-import configparser
-import imaplib
 import argparse
+import configparser
 import csv
+import imaplib
+import logging
 import re
-
-from rich.console import Console
-from rich.logging  import RichHandler
-from rich.progress import track
+import rich
+import rich.console
 import rich.traceback
+import rich.logging  
+import rich.progress 
 
 import umplib.message
 
@@ -50,16 +48,14 @@ def dicts2csv(filename,DSNs):
             csvwriter.writerow(row)
     
 
-########################################## Initialisations globales
-
-
+########################################## Main
 if __name__ == "__main__":
 
     rich.traceback.install()
     log = logging.getLogger("ump")
-    console = Console()
+    console = rich.console.Console()
     logging.basicConfig(
-        handlers=[ RichHandler(rich_tracebacks=True) ] )
+        handlers=[ rich.logging.RichHandler(rich_tracebacks=True) ] )
     log.setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser()
@@ -102,7 +98,7 @@ if __name__ == "__main__":
             if len(uid_list) != 0 :
                 log.debug("processing messages")
                 DSNs = []
-                for uid in track(uid_list):
+                for uid in rich.progress.track(uid_list):
                     log.debug("fetching message " + str(uid) )
                     res1, data  = imap.uid( 'fetch', uid, '(RFC822)')
                     res2, flags = imap.uid( 'store', uid,'-FLAGS','\\Seen')
