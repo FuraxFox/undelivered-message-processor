@@ -1,7 +1,7 @@
 import email
 import email.utils
-import time
 import datetime
+import pytz
 
 
 def _is_part_dsn(msg):
@@ -20,15 +20,15 @@ def _first_among_in(keys, values_dict ):
             return values_dict[k]
     return None
 
-def _smtp_timestamp_to_iso8601(stamp):
-    #tm = time.mktime(email.utils.parsedate(stamp))
-    #dt = datetime.datetime(tm)
-    #return dt.isoformat()
-    return stamp
+def _rfc822_to_iso8601(stamp):
+    # conversion from RFC2822 timestamp to datetime is ugly
+    # see <https://stackoverflow.com/questions/1568856/how-do-i-convert-rfc822-to-a-python-datetime-object>
+    date_time_obj = datetime.datetime.fromtimestamp( email.utils.mktime_tz(email.utils.parsedate_tz( stamp )), pytz.utc )
+    return date_time_obj.isoformat()
 
-def _parse_dsn(dsntext,defaults):
+def _parse_dsn(dsn_text,defaults):
     res = []
-    for sub in dsntext.split("\n"):
+    for sub in dsn_text.split("\n"):
         if ':' in sub:
             res.append(map(str.strip, sub.split(':', 1)))
     res = dict(res)
@@ -40,7 +40,7 @@ def _parse_dsn(dsntext,defaults):
     sender     = _first_among_in( ['X-Postfix-Sender','From', 'Sender'], res ) 
     recipient  = _first_among_in( ['Original-Recipient', 'Final-Recipient'], res )
     message_id = _first_among_in( ['X-Original-Message-ID','X-Postfix-Queue-ID', 'final-log-id'], res )            
-    res['Arrival-Date'] = _smtp_timestamp_to_iso8601(res['Arrival-Date'])
+    res['Arrival-Date'] = _rfc822_to_iso8601(res['Arrival-Date'])
     res['To']         = str(recipient)
     res['From']       = str(sender)
     res['Message-ID'] = str(message_id)
