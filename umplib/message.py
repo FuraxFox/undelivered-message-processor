@@ -1,6 +1,5 @@
 import email
 
-
 def _is_part_dsn(msg):
     if len(msg) <= 1:
         return False
@@ -14,16 +13,26 @@ def _parse_dsn(dsntext):
         if ':' in sub:
             res.append(map(str.strip, sub.split(':', 1)))
     res = dict(res)
+    sender = ''
+    recipient = ''
+    if not res['X-Postfix-Sender'] is None:
+        sender = res['X-Postfix-Sender']    
+    if not res['Original-Recipient'] is None:
+        recipient = res['Original-Recipient']    
+    res['To']   = recipient
+    res['From'] = sender
+
     return res
 
 class DSNMessage :
-    
+    """
+    Minimal wrapper for DSN message
+    """
     def __init__(self, msgbytes, logger=None):
         self._dsn = None
         self.orig_msg = None
         self.logger=logger
         self._parse_message(msgbytes)
-
     
     def _parse_message(self, msgbytes):
         msg = email.message_from_bytes( msgbytes )
@@ -44,7 +53,6 @@ class DSNMessage :
                     self.orig_msg= payload[2] # original message
         else: 
             self.logger.debug("not multipart")
-
 
     def DSN( self ):
         return self._dsn
