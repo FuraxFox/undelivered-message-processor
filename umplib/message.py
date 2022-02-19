@@ -8,20 +8,29 @@ def _is_part_dsn(msg):
         return False
     return True
 
+def _first_among_in(keys, values_dict ):
+    """
+    return the value associated with the first key present in values_dict
+    """
+    for k in keys:
+        if k in values_dict:
+            return values_dict[k]
+    return None
+
 def _parse_dsn(dsntext):
     res = []
     for sub in dsntext.split("\n"):
         if ':' in sub:
             res.append(map(str.strip, sub.split(':', 1)))
     res = dict(res)
-    sender = ''
-    recipient = ''
-    if 'X-Postfix-Sender' in res.keys():
-        sender = res['X-Postfix-Sender']    
-    if 'Original-Recipient' in res.keys():
-        recipient = res['Original-Recipient']    
-    res['To']   = recipient
-    res['From'] = sender
+    
+    sender     = _first_among_in( ['X-Postfix-Sender','From', 'Sender'], res ) 
+    recipient  = _first_among_in( ['Original-Recipient', 'Final-Recipient'], res )
+    message_id = _first_among_in( ['X-Original-Message-ID','X-Postfix-Queue-ID', 'final-log-id'], res )            
+
+    res['To']         = str(recipient)
+    res['From']       = str(sender)
+    res['Message-ID'] = str(message_id)
 
     return res
 

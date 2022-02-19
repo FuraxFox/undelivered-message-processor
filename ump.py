@@ -7,13 +7,11 @@ import configparser
 import imaplib
 import argparse
 import csv
+import re
 
 from rich.console import Console
 from rich.logging  import RichHandler
 from rich.progress import track
-from rich.pretty import pprint
-#from rich import inspect
-#from rich import print
 import rich.traceback
 
 import umplib.message
@@ -21,18 +19,27 @@ import umplib.message
 
 def dicts2csv(filename,DSNs):
     headers = [
-        'From','To', 
+        'From',
+        'To', 
         'Arrival-Date',
         'Action',
+        'Status',
         'Diagnostic-Code',
         'Reporting-MTA',
-        'Final-Recipient']
+        'Remote-MTA',
+        'Received-From-MTA',        
+        'Final-Recipient',
+        'Message-ID'
+        ]
     rows = []
     for dsn in DSNs:
         row = []
         for fld in headers:
-            val = dsn[fld]
-            val = val.replace(";",":")
+            if fld in dsn.keys():
+                val = dsn[fld]
+                val = re.sub(";\s*",": ", val)                
+            else:
+                val =''            
             row.append( val )
         rows.append(row)
     with open(filename, 'w') as csvfile:
