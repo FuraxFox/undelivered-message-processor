@@ -60,6 +60,7 @@ The following Python3 modules are required:
 * `argparse`
 * `configparser`
 * `csv`
+* `datetime`
 * `email`
 * `imaplib2`
 * `logging`

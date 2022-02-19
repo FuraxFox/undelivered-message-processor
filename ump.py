@@ -113,8 +113,6 @@ if __name__ == "__main__":
                     else:
                         log.warning("failed to get message uuid:" + uid + " : " + res1)
                 log.info("Finished interrogating server, "+str(len(DSNs))+ " DSN found")
-                #for dsn in DSNs:
-                #    log.info("dsn: "+ str( dsn ) )
                 log.info("saving data to '"+csv_filename+"'")
                 dicts2csv(csv_filename, DSNs)
             else:
