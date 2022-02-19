@@ -75,7 +75,7 @@ class DSNMessage :
         msg = email.message_from_bytes( msgbytes )
         if msg.is_multipart() :
             meta = {}
-            meta['From']= msg.get('From')
+            meta['From']= msg.get('To')
             meta['Arrival-Date'] = msg.get('Date')
 
             payload = msg.get_payload()
