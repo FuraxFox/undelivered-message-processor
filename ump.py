@@ -16,6 +16,8 @@ import umplib.message
 
 
 def dicts2csv(filename,DSNs):
+    """
+    Receive a list of DSN as dictionnaries and write them to an Ms Excel compatible CSV file"""
     headers = [
         'From',
         'To', 
@@ -84,31 +86,36 @@ if __name__ == "__main__":
     log.debug("connexion <"+imap_server +":" +str(imap_port)+ "> ")
     
     try:
+        # connecting to IMAPS server
         with imaplib.IMAP4_SSL( host=imap_server, port=imap_port ) as imap:
             log.debug("connected")
             imap.login( imap_user, imap_password )
             imap.select(imap_folder)
             log.debug("logged in")
 
+            # getting UID list for unread messages 
             ret, data = imap.uid('search', None, '(UNSEEN)')
             if ret != 'OK':
                 raise Exception("Failed to search for unseen messages")
             uid_list_str = data[0]
             uid_list = uid_list_str.split()
             if len(uid_list) != 0 :
+                # there are some unread messages to process
                 log.debug("processing messages")
                 DSNs = []
                 for uid in rich.progress.track(uid_list):
                     log.debug("fetching message " + str(uid) )
                     res1, data  = imap.uid( 'fetch', uid, '(RFC822)')
                     res2, flags = imap.uid( 'store', uid,'-FLAGS','\\Seen')
-                    if res1 == 'OK':                        
+                    if res1 == 'OK':                    
+                        # processing the message content    
                         msg = umplib.message.DSNMessage( data[0][1], logger=log )
                         if not msg.DSN() is None:
                             DSNs.append( msg.DSN() )
                     else:
                         log.warning("failed to get message uuid:" + uid + " : " + res1)
                 log.info("Finished interrogating server, "+str(len(DSNs))+ " DSN found")
+
                 log.info("saving data to '"+csv_filename+"'")
                 dicts2csv(csv_filename, DSNs)
             else:
@@ -116,6 +123,7 @@ if __name__ == "__main__":
     except:
         log.exception("problem with IMAP server")
         exit(1)
+
     log.info("done.")
 
 

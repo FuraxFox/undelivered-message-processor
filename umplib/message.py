@@ -5,6 +5,10 @@ import pytz
 
 
 def _is_part_dsn(msg):
+    """
+    Receive a MIME part and returns True if it is a DSN
+    False is returned otherwise
+    """
     if len(msg) <= 1:
         return False
     if msg[1].get_content_type() != 'message/delivery-status':
@@ -21,12 +25,18 @@ def _first_among_in(keys, values_dict ):
     return None
 
 def _rfc822_to_iso8601(stamp):
+    """
+    Receiving a RFC822 formated date time and returning is as a ISO-8601 compliant string
+    """
     # conversion from RFC2822 timestamp to datetime is ugly
     # see <https://stackoverflow.com/questions/1568856/how-do-i-convert-rfc822-to-a-python-datetime-object>
     date_time_obj = datetime.datetime.fromtimestamp( email.utils.mktime_tz(email.utils.parsedate_tz( stamp )), pytz.utc )
     return date_time_obj.isoformat()
 
 def _parse_dsn(dsn_text,defaults):
+    """
+    Convert a DSN MIME part to a dictionnary keyed by DSN fields
+    """
     res = []
     for sub in dsn_text.split("\n"):
         if ':' in sub:
@@ -58,6 +68,9 @@ class DSNMessage :
         self._parse_message(msgbytes)
     
     def _parse_message(self, msgbytes):
+        """
+        Parse a message and extract eventual DSN
+        """
         msg = email.message_from_bytes( msgbytes )
         if msg.is_multipart() :
             meta = {}
