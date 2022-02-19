@@ -53,7 +53,7 @@ folder=INBOX
 4. run
 
 
-## Dependencies
+## Dependencies
 
 The following Python3 modules are required:
 
