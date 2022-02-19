@@ -5,6 +5,8 @@ import logging.handlers
 import rich
 import configparser
 import imaplib
+import argparse
+import csv
 
 from rich.console import Console
 from rich.logging  import RichHandler
@@ -16,7 +18,42 @@ import rich.traceback
 
 import umplib.message
 
+
+def dicts2csv(filename,DSNs):
+    headers = [
+        'From','To', 
+        'Arrival-Date',
+        'Action',
+        'Diagnostic-Code',
+        'Reporting-MTA',
+        'Final-Recipient']
+    rows = []
+    for dsn in DSNs:
+        row = []
+        for fld in headers:
+            val = dsn[fld]
+            val = val.replace(";",":")
+            row.append( val )
+        rows.append(row)
+    with open(filename, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=';',
+                            quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(headers)
+        for row in rows:
+            csvwriter.writerow(row)
+    
+
 ########################################## Initialisations globales
+
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", help="configuration file", default="ump-secret.ini")
+parser.add_argument("-o", "--output", help="destination file",   default="output.csv")
+args = parser.parse_args()
+csv_filename = args.output
+ini_filename = args.config
 
 rich.traceback.install()
 log = logging.getLogger("ump")
@@ -26,23 +63,28 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         handlers=[ RichHandler(rich_tracebacks=True) ] )
-    log.setLevel(logging.DEBUG)
-
-    ini = configparser.ConfigParser()
-    ini.read('ump-secret.ini')
-
-    imap_server   = ini['imap']['server']
-    imap_port     = ini['imap']['port']
-    imap_user     = ini['imap']['login']
-    imap_password = ini['imap']['password']
-
-    log.debug("connexion <"+imap_server +":" +str(imap_port)+ "> ")
-
+    log.setLevel(logging.INFO)
     try:
-        with imaplib.IMAP4_SSL(host=imap_server, port=imap_port, ) as imap:
+        ini = configparser.ConfigParser()
+        ini.read(ini_filename)
+
+        imap_server   = ini['imap']['server']
+        imap_port     = ini['imap']['port']
+        imap_user     = ini['imap']['login']
+        imap_password = ini['imap']['password']
+        imap_folder   = ini['imap']['folder']
+    except:
+        log.exception("failed to read configuration from '"+ini_filename+"'")
+        exit(1)
+
+    log.info("checking "+imap_user+"@"+imap_server+" mailbox")
+    log.debug("connexion <"+imap_server +":" +str(imap_port)+ "> ")
+    
+    try:
+        with imaplib.IMAP4_SSL( host=imap_server, port=imap_port ) as imap:
             log.debug("connected")
-            imap.login(imap_user,imap_password)
-            imap.select()
+            imap.login( imap_user, imap_password )
+            imap.select(imap_folder)
             log.debug("logged in")
 
             ret, data = imap.uid('search', None, '(UNSEEN)')
@@ -52,23 +94,24 @@ if __name__ == "__main__":
             uid_list = uid_list_str.split()
             if len(uid_list) != 0 :
                 log.debug("processing messages")
-                messages = []
+                DSNs = []
                 for uid in track(uid_list):
                     log.debug("fetching message " + str(uid) )
                     res1, data  = imap.uid( 'fetch', uid, '(RFC822)')
                     res2, flags = imap.uid( 'store', uid,'-FLAGS','\\Seen')
-                    if res1 == 'OK':
-                        messages.append( 
-                            umplib.message.DSNMessage( 
-                                data[0][1], 
-                                logger=log ) )
+                    if res1 == 'OK':                        
+                        msg = umplib.message.DSNMessage( data[0][1], logger=log )
+                        if not msg.DSN() is None:
+                            DSNs.append( msg.DSN() )
                     else:
                         log.warning("failed to get message uuid:" + uid + " : " + res1)
-                log.debug("processing collected DSN")
-                for msg in messages:
-                    log.info("dsn: "+ str(msg.DSN()) )
+                log.info("Finished interrogating server, "+str(len(DSNs))+ " DSN found")
+                #for dsn in DSNs:
+                #    log.info("dsn: "+ str( dsn ) )
+                log.info("saving data to '"+csv_filename+"'")
+                dicts2csv(csv_filename, DSNs)
             else:
-                log.info("no unread message")
+                log.info("no message to check")
     except:
         log.exception("problem with IMAP server")
         exit(1)
