@@ -14,6 +14,8 @@ The program reads IMAP settings from a configuration file conforming to INI synt
 
 The output is a CSV file.
 
+The goal of the script is to synthetize into a simple single report the many returns received when mailing multiple adresses to process undelivered or delayed messages.
+
 ## Limitation
 
 Current version only manages DSN for a single recipient.
