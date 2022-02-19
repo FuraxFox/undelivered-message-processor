@@ -53,24 +53,22 @@ def dicts2csv(filename,DSNs):
 ########################################## Initialisations globales
 
 
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--config", help="configuration file", default="ump-secret.ini")
-parser.add_argument("-o", "--output", help="destination file",   default="output.csv")
-args = parser.parse_args()
-csv_filename = args.output
-ini_filename = args.config
-
-rich.traceback.install()
-log = logging.getLogger("ump")
-console = Console()
-
 if __name__ == "__main__":
 
+    rich.traceback.install()
+    log = logging.getLogger("ump")
+    console = Console()
     logging.basicConfig(
         handlers=[ RichHandler(rich_tracebacks=True) ] )
     log.setLevel(logging.INFO)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", help="configuration file", default="ump-secret.ini")
+    parser.add_argument("-o", "--output", help="destination file",   default="output.csv")
+    args = parser.parse_args()
+    csv_filename = args.output
+    ini_filename = args.config
+
     try:
         ini = configparser.ConfigParser()
         ini.read(ini_filename)
@@ -79,7 +77,9 @@ if __name__ == "__main__":
         imap_port     = ini['imap']['port']
         imap_user     = ini['imap']['login']
         imap_password = ini['imap']['password']
-        imap_folder   = ini['imap']['folder']
+        imap_folder = 'INBOX'
+        if 'folder' in ini['imap'].keys():
+            imap_folder   = ini['imap']['folder']            
     except:
         log.exception("failed to read configuration from '"+ini_filename+"'")
         exit(1)
